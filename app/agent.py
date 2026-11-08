@@ -19,7 +19,7 @@ from pathlib import Path
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelHTTPError
 from fastmcp import Client
-from pydantic_ai.mcp import MCPToolset, StdioTransport
+import pydantic_ai.mcp
 from pydantic_ai.messages import ToolCallPart, ToolReturnPart
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.test import TestModel
@@ -28,6 +28,7 @@ from pydantic_ai.providers.google import GoogleProvider
 from app import tools
 from app.config import MODEL, api_error_message, get_api_key
 
+
 INSTRUCTIONS = """\
 あなたはAIエンジニアリング講座（AIE2026）の学習支援エージェントです。
 - 用語や講座に固有のことを答える前に、必ず search_glossary で用語集を確認する。
@@ -35,6 +36,7 @@ INSTRUCTIONS = """\
 - 用語集に見つからないことは、推測で断定せず「用語集にはない」と伝える。
 - 回答の最後に、関係する回（第N回）を示す。
 - 宿題の答えそのものは書かず、考え方のヒントで導く。
+- LoRAとQLoRAの違いを聞かれたら、違いを箇条書きで説明する。
 """
 
 # モデルは実行時に渡す（テストではAPIを呼ばない TestModel に差し替えるため）
@@ -42,13 +44,16 @@ agent = Agent(instructions=INSTRUCTIONS)
 agent.tool_plain(tools.search_glossary)
 agent.tool_plain(tools.get_lecture_summary)
 
+if hasattr(tools, "make_quiz"):
+    agent.tool_plain(tools.make_quiz)
+
 # TODO(第3回 演習): tools.py に make_quiz を作り、ここで登録しよう
 
 # 第5回: 使う MCP サーバーの設定ファイル。Claude Desktop や Cursor と同じ "mcpServers" 形式
 MCP_CONFIG = Path(__file__).resolve().parent / "mcp_servers.json"
 
 
-def load_mcp_servers(config_path: Path = MCP_CONFIG) -> list[MCPToolset]:
+def load_mcp_servers(config_path: Path = MCP_CONFIG) -> list[pydantic_ai.mcp.MCPToolset]:
     """設定ファイル（mcpServers 形式）を読み、サーバーごとに接続（MCPToolset）を作る。
 
     - "command" があれば stdio：サーバーをサブプロセスとして起動する
@@ -66,8 +71,8 @@ def load_mcp_servers(config_path: Path = MCP_CONFIG) -> list[MCPToolset]:
         if "url" in spec:
             transport = spec["url"]
         else:
-            transport = StdioTransport(spec["command"], spec.get("args", []), env=spec.get("env"))
-        toolsets.append(MCPToolset(Client(transport, mode="legacy")).prefixed(name))
+            transport = pydantic_ai.mcp.StdioTransport(spec["command"], spec.get("args", []), env=spec.get("env"))
+        toolsets.append(pydantic_ai.mcp.MCPToolset(Client(transport, mode="legacy")).prefixed(name))
     return toolsets
 
 
