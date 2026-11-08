@@ -68,7 +68,7 @@ def ask(question: str) -> None:
             prompt_tokens = usage.prompt_token_count        # 入力トークン数（履歴＋今回の質問）
             output_tokens = usage.candidates_token_count    # 出力トークン数（今回のAIの返答）
             total_tokens = usage.total_token_count          # 合計トークン数
-            cumulative_tokens += total_tokens               # これまでの合計トークン数に、今回使ったトークン数を足す
+            cumulative_tokens += total_tokens               # type: ignore # これまでの合計トークン数に、今回使ったトークン数を足す
             tpm_ratio = (cumulative_tokens / FREE_TIER_TPM) * 100 # 1分間のトークン上限(100万)の何％を使ったか計算する
             
             print(

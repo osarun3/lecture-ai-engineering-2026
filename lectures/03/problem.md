@@ -38,8 +38,100 @@ uv run python -m app.agent "AIE2026の講座で使う「lecNN-start タグ」と
 ```bash
 uv run python -m app.agent --trace "LoRAとQLoRAの違いは？"
 ```
-
+＿＿＿＿＿＿＿
 `[tool call]` の行で、モデルがどのツールをどんな引数で呼んだかを確認します。`[usage]` の `requests` は、1つの質問で LLM を何回呼んだかを表します。
+uv run：このプロジェクトの環境でプログラムを実行する
+python -m app.agent：app/agent.pyを実行する
+--trace：回答だけでなく、エージェントが使ったツールも表示する
+"LoRAとQLoRAの違いは？"：エージェントに渡す質問
+[tool call]：モデルが「このツールをこの引数で使う」と決めた記録
+[tool return]：ツールが調べて返した結果
+[usage] requests：モデルに問い合わせた回数。たとえば、ツールを使う指示を出すために1回、ツールの結果を受けて回答するためにもう1回、合計2回になることがあります
+tool_calls：ツールを呼んだ回数。requestsとは別の数です
+＿＿＿＿
+AIE2026の講座における「3レベル」とは、宿題の構成を段階的に分けた以下の3つのレベルのことを指します。
+
+1. **基礎**：講義内容の確認を行うレベル
+2. **実装**：自分で実際にコードを書くレベル
+3. **発展**：調査や新たな試みを行うレベル
+
+この3つのレベルのうち、**どれか1つ**に取り組めばその回の宿題は完了となります。なお、原則として宿題の採点はありませんので、ご自身の理解度や目的に合わせて選んで取り組んでみてください。
+
+関連する回：第1回
+(aie2026-exercises) @o ➜ /workspaces/lecture-ai-engineering-2026 (lec03) $ uv run python -m app.agent --trace "LoRAとQLoRAの違いは？"
+[model] gemini-3.5-flash-lite
+講座の用語集によると、LoRAとQLoRAの違いは以下のとおりです。
+
+* **LoRA**
+  事前学習済みの重みを固定したまま、重みの更新分を2つの小さな行列（低ランク行列）の積で表し、その小さな行列だけを学習するPEFT（Parameter-Efficient Fine-Tuning）手法です。学習するパラメータを大幅に削減できます。
+
+* **QLoRA**
+  ベースモデルの重みを4ビットなどに**量子化**してメモリを大幅に節約したうえで、LoRAを適用して学習する手法です。これにより、さらに大きなモデルを小さなGPU環境でも扱えるようになります。
+
+（関係する回：第2回）
+
+--- trace ---
+[tool call]   search_glossary({'query': 'LoRA'})
+[tool call]   search_glossary({'query': 'QLoRA'})
+[tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…
+[tool return] search_glossary -> [{"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2…
+[usage] RunUsage(cost=Decimal('0.0008338'), details={'text_prompt_tokens': 1196}, input_text_tokens=1196, input_tokens=1196, output_tokens=190, requests=2, tool_calls=2)
+＿＿＿＿
+uv run python -m app.agent --trace "LoRAとQLoRAの違いは？"
+
+[model] gemini-3.5-flash-lite
+LoRAとQLoRAの主な違いは、**ベースモデルの重みの保持方法（量子化の有無）**にあります。
+
+* **LoRA**: 
+  事前学習済みの重みをそのまま固定し、追加の小さな低ランク行列（アダプタ）のみを学習してパラメータ数やメモリを削減するPEFT手法です。
+* **QLoRA**: 
+  LoRAの手法をベースにしつつ、ベースモデルの重みを4ビットなどに**量子化**してさらにメモリを大幅に節約した上で学習を行います。これにより、より大きなモデルを比較的小さなGPUメモリでも扱えるようになります。
+
+（関連する回：第2回）
+
+--- trace ---
+[tool call]   search_glossary({'query': 'LoRA'})
+[tool call]   search_glossary({'query': 'QLoRA'})
+[tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…
+[tool return] search_glossary -> [{"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2…
+[usage] RunUsage(cost=Decimal('0.0008530'), details={'text_prompt_tokens': 1310}, input_text_tokens=1310, input_tokens=1310, output_tokens=184, requests=2, tool_calls=2)
+＿＿＿＿
+agentに追加
+[model] gemini-3.5-flash-lite
+LoRAとQLoRAの違いは以下のとおりです。
+
+* **LoRA**: 事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列（低ランク行列）で表し、その小さな行列だけを効率的に学習するPEFT手法です。
+* **QLoRA**: ベースモデルの重みを4ビットなどに量子化してメモリを大きく節約したうえで、LoRAによる学習を行う手法です。これにより、より大きなモデルを小さなGPU環境でも扱えるようになります。
+
+（第2回）
+
+--- trace ---
+[tool call]   search_glossary({'query': 'LoRA'})
+[tool call]   search_glossary({'query': 'QLoRA'})
+[tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…
+[tool return] search_glossary -> [{"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2…
+[usage] RunUsage(cost=Decimal('0.0007937'), details={'text_prompt_tokens': 1354}, input_text_tokens=1354, input_tokens=1354, output_tokens=155, requests=2, tool_calls=2)
+＿＿＿
+toolに追加
+
+[model] gemini-3.5-flash-lite
+LoRAとQLoRAの違いは以下の通りです。
+
+- **LoRA**
+  - 事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法です。学習するパラメータが少なく、学習結果（アダプタ）も小さいファイルで保存できます。
+- **QLoRA**
+  - ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法です。これにより、より大きなモデルを小さなGPUで扱うことができます。
+
+（第2回）
+
+--- trace ---
+[tool call]   search_glossary({'query': 'LoRA'})
+[tool call]   search_glossary({'query': 'QLoRA'})
+[tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…
+[tool return] search_glossary -> [{"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2…
+[usage] RunUsage(cost=Decimal('0.0008697'), details={'text_prompt_tokens': 1424}, input_text_tokens=1424, input_tokens=1424, output_tokens=177, requests=2, tool_calls=2)
+＿＿＿＿
+
 
 ### 3. ツールを1つ追加する
 
